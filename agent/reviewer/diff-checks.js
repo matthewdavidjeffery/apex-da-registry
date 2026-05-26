@@ -3,7 +3,7 @@ import { parseApexClass, findMissingMethods, findExtraMethods, findReturnTypeMis
 /**
  * Runs all parity and drift checks for a single DA set.
  *
- * @param {object} classbodies  - { interface, implementation, mock, test }
+ * @param {object} classBodies  - { interface, implementation, mock, test }
  * @param {object} manifestEntry - the DA's entry from da-manifest.json (may be null for new DAs)
  * @param {Set<string>} knownSObjects - from manifest for SObject classification
  * @returns {DiffResult}
@@ -49,13 +49,17 @@ export async function runChecks(classBodies, manifestEntry, knownSObjects = new 
 // ─── Individual Checks ────────────────────────────────────────────────────────
 
 function checkInterfaceParity(ifaceMethods, implMethods) {
-  const missing = findMissingMethods(ifaceMethods, implMethods);
-  const extra   = findExtraMethods(ifaceMethods, implMethods);
+  const missing    = findMissingMethods(ifaceMethods, implMethods);
+  const extra      = findExtraMethods(ifaceMethods, implMethods);
   const mismatches = findReturnTypeMismatches(ifaceMethods, implMethods);
 
   const errors = [
-    ...missing.map(m => `\`${formatSig(m)}\` is defined in the interface but missing from the implementation`),
-    ...mismatches.map(m => `\`${m.method}\` return type mismatch — interface: \`${m.expected}\`, implementation: \`${m.actual}\``)
+    ...missing.map(m =>
+      `\`${formatSig(m)}\` is defined in the interface but missing from the implementation`
+    ),
+    ...mismatches.map(m =>
+      `\`${m.method}\` return type mismatch — interface: \`${m.expected}\`, implementation: \`${m.actual}\``
+    )
   ];
 
   const warnings = extra.map(m =>
@@ -70,8 +74,12 @@ function checkMockParity(ifaceMethods, mockMethods) {
   const mismatches = findReturnTypeMismatches(ifaceMethods, mockMethods);
 
   const errors = [
-    ...missing.map(m => `\`${formatSig(m)}\` is missing from the mock — add a stub returning ${defaultReturn(m.returnType)}`),
-    ...mismatches.map(m => `\`${m.method}\` return type mismatch — interface: \`${m.expected}\`, mock: \`${m.actual}\``)
+    ...missing.map(m =>
+      `\`${formatSig(m)}\` is missing from the mock — add a stub returning ${defaultReturn(m.returnType)}`
+    ),
+    ...mismatches.map(m =>
+      `\`${m.method}\` return type mismatch — interface: \`${m.expected}\`, mock: \`${m.actual}\``
+    )
   ];
 
   return { pass: errors.length === 0, errors };
@@ -84,7 +92,9 @@ function checkMockParity(ifaceMethods, mockMethods) {
  *   - ADDITIVE (default): only new methods missing from manifest are errors;
  *     methods removed from the interface are warnings (deletion in progress)
  *
- * @param {string} mode - "strict" | "additive"
+ * @param {MethodSignature[]} ifaceMethods - live parsed from DAI class
+ * @param {object|null} manifestEntry - entry from da-manifest.json
+ * @param {"strict"|"additive"} mode
  */
 function checkManifestDrift(ifaceMethods, manifestEntry, mode = "additive") {
   // New DA set — not yet cataloged
@@ -98,16 +108,16 @@ function checkManifestDrift(ifaceMethods, manifestEntry, mode = "additive") {
 
   const manifestMethods = manifestEntry.methods ?? [];
 
-  // Convert manifest methods to the same shape as parsed methods for diff
-  const manifestAsparsed = manifestMethods.map(m => ({
+  // Normalize manifest methods into the same shape as parsed methods
+  const manifestAsParsed = manifestMethods.map(m => ({
     name: m.name,
-    parameters: m.parameters ?? [],
+    parameters: (m.parameters ?? []).map(p => ({ name: p.name, type: p.type })),
     returnType: m.returnType
   }));
 
-  const addedToInterface   = findMissingMethods(ifaceMethods, manifestAsparsed);
-  const removedFromInterface = findMissingMethods(manifestAsparsed, ifaceMethods);
-  const returnMismatches   = findReturnTypeMismatches(ifaceMethods, manifestAsParams);
+  const addedToInterface     = findMissingMethods(ifaceMethods, manifestAsParsed);
+  const removedFromInterface = findMissingMethods(manifestAsParsed, ifaceMethods);
+  const returnMismatches     = findReturnTypeMismatches(ifaceMethods, manifestAsParsed);
 
   const errors = [
     ...addedToInterface.map(m =>
@@ -181,11 +191,11 @@ function formatSig(method) {
  * Used in mock parity error messages to guide developers.
  */
 function defaultReturn(returnType) {
-  if (returnType === "void")                    return "nothing (void stub)";
-  if (returnType === "Boolean")                 return "`false`";
+  if (returnType === "void")                              return "nothing (void stub)";
+  if (returnType === "Boolean")                           return "`false`";
   if (returnType === "Integer" || returnType === "Decimal") return "`0`";
-  if (returnType.startsWith("List"))            return "an empty list `new ${returnType}()`";
-  if (returnType.startsWith("Map"))             return "an empty map `new ${returnType}()`";
-  if (returnType.startsWith("Set"))             return "an empty set `new ${returnType}()`";
+  if (returnType.startsWith("List"))                      return `an empty list \`new ${returnType}()\``;
+  if (returnType.startsWith("Map"))                       return `an empty map \`new ${returnType}()\``;
+  if (returnType.startsWith("Set"))                       return `an empty set \`new ${returnType}()\``;
   return "`null`";
 }
