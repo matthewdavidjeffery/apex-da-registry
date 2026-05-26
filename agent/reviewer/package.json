@@ -1,0 +1,17 @@
+{
+  "name": "da-reviewer",
+  "version": "1.0.0",
+  "description": "DA layer Apex reviewer agent",
+  "type": "module",
+  "scripts": {
+    "setup": "bash scripts/install-pmd.sh",
+    "test": "node --test parse-signatures.test.js",
+    "review": "node reviewer-agent.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.0",
+    "@octokit/rest": "^20.0.0",
+    "@xmldom/xmldom": "^0.8.10",
+    "xpath": "^0.0.34"
+  }
+}
