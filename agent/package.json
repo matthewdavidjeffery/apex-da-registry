@@ -6,7 +6,8 @@
     "catalog": "node da-cataloger.js",
     "docs":    "node docs-writer.js",
     "copilot": "node developer-copilot.js",
-    "ask":     "node developer-copilot.js"
+    "ask":      "node developer-copilot.js",
+    "generate": "node generator-agent.js"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0"
