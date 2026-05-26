@@ -196,7 +196,7 @@ async function agentTurn(userMessage, conversationHistory, systemPrompt) {
         },
         {
           type: "url",
-          url: "https://api.githubcopilot.com/mcp/",
+          url: process.env.GITHUB_MCP_URL || "https://api.githubcopilot.com/mcp/",
           name: "github",
           authorization_token: process.env.GITHUB_TOKEN
         }

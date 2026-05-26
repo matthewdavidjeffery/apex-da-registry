@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import fs from "fs/promises";
+import path from "path";
 import { formatComment } from "./comment-formatter.js";
 
 const client = new Anthropic();
@@ -75,9 +76,8 @@ async function runReviewer() {
     REPO_NAME, BASE_SHA, HEAD_SHA
   } = process.env;
 
-  const manifest = JSON.parse(
-    await fs.readFile("../../da-manifest.json", "utf8")
-  );
+  const manifestPath = process.env.MANIFEST_PATH || path.resolve(process.cwd(), "da-manifest.json");
+  const manifest = JSON.parse(await fs.readFile(manifestPath, "utf8"));
 
   const conversationHistory = [{
     role: "user",
@@ -115,7 +115,7 @@ Begin.
       messages: conversationHistory,
       mcp_servers: [{
         type: "url",
-        url: "https://api.githubcopilot.com/mcp/",
+        url: process.env.GITHUB_MCP_URL || "https://api.githubcopilot.com/mcp/",
         name: "github",
         authorization_token: GITHUB_TOKEN
       }]

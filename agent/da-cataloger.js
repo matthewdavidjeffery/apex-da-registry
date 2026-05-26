@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import fs from "fs/promises";
+import path from "path";
 
 const client = new Anthropic();
 
@@ -60,7 +61,7 @@ Begin now.
         },
         {
           type: "url",
-          url: "https://api.githubcopilot.com/mcp/",
+          url: process.env.GITHUB_MCP_URL || "https://api.githubcopilot.com/mcp/",
           name: "github",
           authorization_token: process.env.GITHUB_TOKEN
         }
@@ -93,8 +94,9 @@ async function extractAndSaveManifest(responseText) {
   const jsonMatch = responseText.match(/```json\n([\s\S]+?)\n```/);
   if (jsonMatch) {
     const manifest = JSON.parse(jsonMatch[1]);
-    await fs.writeFile("../../da-manifest.json", JSON.stringify(manifest, null, 2));
-    console.log("Manifest saved to da-manifest.json");
+    const manifestPath = process.env.MANIFEST_PATH || path.resolve(process.cwd(), "da-manifest.json");
+    await fs.writeFile(manifestPath, JSON.stringify(manifest, null, 2));
+    console.log(`Manifest saved to ${manifestPath}`);
   }
 }
 
