@@ -1,0 +1,14 @@
+{
+  "name": "da-agents",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "catalog": "node da-cataloger.js",
+    "docs":    "node docs-writer.js",
+    "copilot": "node developer-copilot.js",
+    "ask":     "node developer-copilot.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.0"
+  }
+}
